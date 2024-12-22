@@ -5,7 +5,7 @@
 
 import { Dispatch, Store } from 'amos';
 import { must } from 'amos-utils';
-import { createContext, createElement, ReactNode, useContext } from 'react';
+import { createContext, createElement, type ReactElement, ReactNode, useContext } from 'react';
 
 const Context = createContext<Store | null>(null);
 
@@ -14,7 +14,7 @@ export interface ProviderProps {
   children: ReactNode;
 }
 
-export const Provider = ({ store, children }: ProviderProps) => {
+export const Provider = ({ store, children }: ProviderProps): ReactElement => {
   must(store, 'store is required for <Provider />.');
   return createElement(Context.Provider, { value: store }, children);
 };

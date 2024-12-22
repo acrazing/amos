@@ -1,7 +1,7 @@
 {
   "name": "@amos/root",
   "private": true,
-  "version": "0.3.0-beta.38",
+  "version": "0.3.0-beta.39",
   "license": "MIT",
   "workspaces": [
     "packages/*",

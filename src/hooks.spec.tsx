@@ -70,7 +70,11 @@ describe('useSelector', () => {
   it('should update - box', async () => {
     const { result, dispatch } = renderUseSelector(() => [countBox] as const);
     expect(result.current).toEqual([0]);
-    act(() => dispatch(increment()));
+    await act(async () => {
+      dispatch(increment());
+      await Promise.resolve();
+    });
+    await Promise.resolve();
     expect(result.current).toEqual([1]);
   });
 
@@ -108,8 +112,12 @@ describe('useSelector', () => {
     rerender({ multiply: 2 });
     expectCalled(true, true, true);
     expect(result.current).toEqual([4, 4, 2, 1]);
-    act(() => dispatch(increment()));
+    await act(async () => {
+      dispatch(increment());
+      await Promise.resolve();
+    });
     expectCalled(false, false, false);
+    await Promise.resolve();
     expect(result.current).toEqual([4, 4, 2, 2]);
   });
 });

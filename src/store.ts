@@ -184,6 +184,17 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
   let dispatchDepth = 0;
   let dispatchingSnapshot: Snapshot = {};
 
+  function flushDispatchQueue() {
+    if (--dispatchDepth === 0) {
+      if (Object.keys(dispatchingSnapshot).length > 0) {
+        const resultSnapshot = { ...dispatchingSnapshot };
+        batchedUpdates(() => {
+          listeners.forEach((fn) => fn(resultSnapshot));
+        });
+      }
+    }
+  }
+
   const record = (key: string, newState: unknown) => {
     if (newState !== state[key] || dispatchingSnapshot.hasOwnProperty(key)) {
       dispatchingSnapshot[key] = newState;
@@ -237,16 +248,7 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
         }
       } catch {}
 
-      Promise.resolve().then(function flushDispatchQueue() {
-        if (--dispatchDepth === 0) {
-          if (Object.keys(dispatchingSnapshot).length > 0) {
-            const resultSnapshot = { ...dispatchingSnapshot };
-            batchedUpdates(() => {
-              listeners.forEach((fn) => fn(resultSnapshot));
-            });
-          }
-        }
-      });
+      Promise.resolve().then(flushDispatchQueue);
 
       return res;
     } as any),

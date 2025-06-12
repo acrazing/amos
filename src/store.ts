@@ -143,6 +143,19 @@ export interface Store {
   select: Select;
 }
 
+type SchedulerFn = (cb: () => void) => void;
+
+export let batchedUpdates: SchedulerFn = (cb) => cb();
+
+try {
+  const reactDom = require('react-dom');
+  if (reactDom.unstable_batchedUpdates) {
+    batchedUpdates = reactDom.unstable_batchedUpdates;
+  }
+} catch {
+  // 非 React 环境，不做处理
+}
+
 export type StoreEnhancer = (store: Store) => Store;
 
 /**
@@ -155,7 +168,7 @@ export type StoreEnhancer = (store: Store) => Store;
 export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhancer[]): Store {
   const state: Snapshot = {};
   const boxes: Box[] = [];
-  const listeners: Array<(updatedSnapshot: Snapshot) => void> = [];
+  const listeners: Set<(updatedSnapshot: Snapshot) => void> = new Set();
   const ensure = (box: Box) => {
     if (state.hasOwnProperty(box.key)) {
       return;
@@ -202,38 +215,45 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
 
   let store: Store = {
     snapshot: () => state,
-    subscribe: (fn) => {
-      listeners.push(fn);
+    subscribe: function subscribe(fn) {
+      listeners.add(fn);
       return () => {
-        const index = listeners.indexOf(fn);
-        if (index > -1) {
-          listeners.splice(index, 1);
-        }
+        listeners.delete(fn);
       };
     },
-    dispatch: defineAmosObject(
-      'store.dispatch',
-      (tasks: Dispatchable | readonly Dispatchable[]) => {
-        if (++dispatchDepth === 1) {
-          dispatchingSnapshot = {};
+    dispatch: defineAmosObject('store.dispatch', function dispatch(
+      tasks: Dispatchable | readonly Dispatchable[],
+    ) {
+      if (++dispatchDepth === 1) {
+        dispatchingSnapshot = {};
+      }
+
+      let res;
+      try {
+        if (isArray(tasks)) {
+          res = tasks.map(exec);
+        } else {
+          res = exec(tasks);
         }
-        try {
-          if (isArray(tasks)) {
-            return tasks.map(exec);
-          } else {
-            return exec(tasks);
-          }
-        } finally {
-          if (--dispatchDepth === 0) {
-            if (Object.keys(dispatchingSnapshot).length > 0) {
-              const resultSnapshot = { ...dispatchingSnapshot };
-              [...listeners].forEach((fn) => fn(resultSnapshot));
-            }
+      } catch {}
+
+      Promise.resolve().then(function flushDispatchQueue() {
+        if (--dispatchDepth === 0) {
+          if (Object.keys(dispatchingSnapshot).length > 0) {
+            const resultSnapshot = { ...dispatchingSnapshot };
+            batchedUpdates(() => {
+              listeners.forEach((fn) => fn(resultSnapshot));
+            });
           }
         }
-      },
-    ),
-    select: defineAmosObject('store.select', (selectable: Selectable, snapshot?: Snapshot): any => {
+      });
+
+      return res;
+    } as any),
+    select: defineAmosObject('store.select', function select(
+      selectable: Selectable,
+      snapshot?: Snapshot,
+    ) {
       if (typeof selectable === 'function') {
         if (snapshot) {
           if (selectingSnapshot) {
@@ -255,7 +275,7 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
         }
         return state[selectable.key];
       }
-    }),
+    }) as any,
   };
   store = enhancers.reduce((previousValue, currentValue) => currentValue(previousValue), store);
   if (typeof process === 'object' && process.env.NODE_ENV === 'development') {

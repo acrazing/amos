@@ -1,6 +1,6 @@
 {
   "name": "@sourcebug/amos",
-  "version": "0.2.13",
+  "version": "0.2.15",
   "description": "A decentralized state manager for react",
   "keywords": [
     "react",

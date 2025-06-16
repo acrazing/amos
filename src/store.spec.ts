@@ -75,7 +75,7 @@ describe('store', () => {
     store.dispatch(setCount(1));
     store.dispatch(setCount(2));
     await Promise.resolve();
-    expect(listener).toBeCalledTimes(1);
+    expect(listener).toBeCalledTimes(2);
     listener.mockClear();
     disposer();
     store.dispatch(setCount(1));

@@ -10,9 +10,9 @@
     "amos"
   ],
   "author": "acrazing <joking.young@gmail.com>",
-  "main": "dist/amos.cjs.js",
-  "module": "dist/amos.es.js",
-  "umd": "dist/amos.umd.js",
+  "main": "dist/amos-alter.cjs.js",
+  "module": "dist/amos-alter.es.js",
+  "umd": "dist/amos-alter.umd.js",
   "types": "dist/index.d.ts",
   "files": [
     "src/",
@@ -117,5 +117,8 @@
     "jsxBracketSameLine": false,
     "arrowParens": "always",
     "endOfLine": "lf"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

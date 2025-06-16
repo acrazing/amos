@@ -141,6 +141,12 @@ export interface Store {
    * select a selectable thing
    */
   select: Select;
+
+  /**
+   * whether to auto batch the updates
+   * @default false
+   */
+  isAutoBatch?: boolean;
 }
 
 type SchedulerFn = (cb: () => void) => void;
@@ -226,6 +232,7 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
 
   let store: Store = {
     snapshot: () => state,
+    isAutoBatch: false,
     subscribe: function subscribe(fn) {
       listeners.add(fn);
       return () => {
@@ -248,7 +255,11 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
         }
       } catch {}
 
-      Promise.resolve().then(flushDispatchQueue);
+      if (store.isAutoBatch) {
+        Promise.resolve().then(flushDispatchQueue);
+      } else {
+        flushDispatchQueue();
+      }
 
       return res;
     } as any),

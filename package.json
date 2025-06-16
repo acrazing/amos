@@ -1,6 +1,6 @@
 {
-  "name": "amos",
-  "version": "0.2.12",
+  "name": "@sourcebug/amos",
+  "version": "0.2.13",
   "description": "A decentralized state manager for react",
   "keywords": [
     "react",
@@ -117,6 +117,5 @@
     "jsxBracketSameLine": false,
     "arrowParens": "always",
     "endOfLine": "lf"
-  },
-  "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
+  }
 }

@@ -65,7 +65,7 @@ function shouldSelectorRecompute(
   if (!selector.factory?.deps || !deps[index]) {
     return true;
   }
-  const newDeps = selector.factory.deps(store.select, ...selector.args);
+  const newDeps = selector.factory.deps(store.select, ...(selector.args || []));
   const isEqual = arrayEqual(deps[index] || [], newDeps);
   deps[index] = newDeps;
   return !isEqual;
@@ -193,7 +193,7 @@ export function useSelector<Rs extends Selectable[]>(...selectors: Rs): MapSelec
         } catch (e) {
           snapshots.length = results.length = i;
           lastStore.current!.error =
-            typeof e === 'object' && e
+            typeof e === 'object' && e && 'message' in e
               ? Object.assign(e, { message: '[Amos] selector throws error: ' + e.message })
               : new Error('[Amos] selector throws falsy error: ' + e);
           update();

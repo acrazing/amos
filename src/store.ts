@@ -189,14 +189,19 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
 
   let dispatchDepth = 0;
   let dispatchingSnapshot: Snapshot = {};
+  let store: Store;
 
   function flushDispatchQueue() {
     if (--dispatchDepth === 0) {
       if (Object.keys(dispatchingSnapshot).length > 0) {
         const resultSnapshot = { ...dispatchingSnapshot };
-        batchedUpdates(() => {
+        if (store.isAutoBatch) {
+          batchedUpdates(() => {
+            [...listeners].forEach((fn) => fn(resultSnapshot));
+          });
+        } else {
           [...listeners].forEach((fn) => fn(resultSnapshot));
-        });
+        }
       }
     }
   }
@@ -230,7 +235,7 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
 
   let selectingSnapshot: Snapshot | undefined;
 
-  let store: Store = {
+  store = {
     snapshot: () => state,
     isAutoBatch: false,
     subscribe: function subscribe(fn) {
@@ -291,8 +296,5 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
     }) as any,
   };
   store = enhancers.reduce((previousValue, currentValue) => currentValue(previousValue), store);
-  if (typeof process === 'object' && process.env.NODE_ENV === 'development') {
-    Object.freeze(store);
-  }
   return store;
 }

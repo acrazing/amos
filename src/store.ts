@@ -147,20 +147,13 @@ export interface Store {
    * @default false
    */
   isAutoBatch?: boolean;
+
+  batchedUpdates: SchedulerFn;
 }
 
 type SchedulerFn = (cb: () => void) => void;
 
 export let batchedUpdates: SchedulerFn = (cb) => cb();
-
-try {
-  const reactDom = require('react-dom');
-  if (reactDom.unstable_batchedUpdates) {
-    batchedUpdates = reactDom.unstable_batchedUpdates;
-  }
-} catch {
-  // 非 React 环境，不做处理
-}
 
 export type StoreEnhancer = (store: Store) => Store;
 
@@ -195,13 +188,9 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
     if (--dispatchDepth === 0) {
       if (Object.keys(dispatchingSnapshot).length > 0) {
         const resultSnapshot = { ...dispatchingSnapshot };
-        if (store.isAutoBatch) {
-          batchedUpdates(() => {
-            [...listeners].forEach((fn) => fn(resultSnapshot));
-          });
-        } else {
+        store.batchedUpdates(() => {
           [...listeners].forEach((fn) => fn(resultSnapshot));
-        }
+        });
       }
     }
   }
@@ -294,6 +283,7 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
         return state[selectable.key];
       }
     }) as any,
+    batchedUpdates: (cb) => cb(),
   };
   store = enhancers.reduce((previousValue, currentValue) => currentValue(previousValue), store);
   return store;

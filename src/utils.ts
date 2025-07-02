@@ -52,7 +52,7 @@ export function hoistMethod<M extends (...args: any[]) => any>(
 }
 
 export const kAmosObject: unique symbol =
-  typeof Symbol === 'function' ? Symbol('AMOS_OBJECT') : ('Symbol(AMOS_OBJECT)' as any);
+  typeof Symbol === 'function' ? Symbol.for('AMOS_OBJECT') : ('Symbol(AMOS_OBJECT)' as any);
 
 /**
  * A symbol indicates the object is a amos' object.

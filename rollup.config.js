@@ -20,7 +20,7 @@ const top = name.replace(/(?:^|-)(.)/g, ($0, $1) => $1.toUpperCase());
 const options = (format) => ({
   input: 'src/index.ts',
   output: {
-    file: `dist/${name}.${format}.js`,
+    file: `dist/${name}-alter.${format}.js`,
     format,
     sourcemap: true,
     name: top,

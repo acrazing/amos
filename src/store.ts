@@ -141,7 +141,19 @@ export interface Store {
    * select a selectable thing
    */
   select: Select;
+
+  /**
+   * whether to auto batch the updates
+   * @default false
+   */
+  isAutoBatch?: boolean;
+
+  batchedUpdates: SchedulerFn;
 }
+
+type SchedulerFn = (cb: () => void) => void;
+
+export let batchedUpdates: SchedulerFn = (cb) => cb();
 
 export type StoreEnhancer = (store: Store) => Store;
 
@@ -155,7 +167,9 @@ export type StoreEnhancer = (store: Store) => Store;
 export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhancer[]): Store {
   const state: Snapshot = {};
   const boxes: Box[] = [];
-  const listeners: Array<(updatedSnapshot: Snapshot) => void> = [];
+  const listeners: Set<(updatedSnapshot: Snapshot) => void> = new Set();
+  const dispatchingListeners: Set<(updatedSnapshot: Snapshot) => void> = new Set();
+
   const ensure = (box: Box) => {
     if (state.hasOwnProperty(box.key)) {
       return;
@@ -170,6 +184,20 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
 
   let dispatchDepth = 0;
   let dispatchingSnapshot: Snapshot = {};
+  let store: Store;
+
+  function flushDispatchQueue() {
+    if (--dispatchDepth === 0) {
+      if (Object.keys(dispatchingSnapshot).length > 0) {
+        const resultSnapshot = { ...dispatchingSnapshot };
+        store.batchedUpdates(() => {
+          dispatchingListeners.forEach((fn) => fn(resultSnapshot));
+          dispatchingListeners.clear();
+          [...listeners].forEach((fn) => fn(resultSnapshot));
+        });
+      }
+    }
+  }
 
   const record = (key: string, newState: unknown) => {
     if (newState !== state[key] || dispatchingSnapshot.hasOwnProperty(key)) {
@@ -200,40 +228,46 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
 
   let selectingSnapshot: Snapshot | undefined;
 
-  let store: Store = {
+  store = {
     snapshot: () => state,
-    subscribe: (fn) => {
-      listeners.push(fn);
+    isAutoBatch: false,
+    subscribe: function subscribe(fn) {
+      if (dispatchDepth > 0) {
+        dispatchingListeners.add(fn);
+      }
+      listeners.add(fn);
       return () => {
-        const index = listeners.indexOf(fn);
-        if (index > -1) {
-          listeners.splice(index, 1);
-        }
+        listeners.delete(fn);
       };
     },
-    dispatch: defineAmosObject(
-      'store.dispatch',
-      (tasks: Dispatchable | readonly Dispatchable[]) => {
-        if (++dispatchDepth === 1) {
-          dispatchingSnapshot = {};
+    dispatch: defineAmosObject('store.dispatch', function dispatch(
+      tasks: Dispatchable | readonly Dispatchable[],
+    ) {
+      if (++dispatchDepth === 1) {
+        dispatchingSnapshot = {};
+      }
+
+      let res;
+      try {
+        if (isArray(tasks)) {
+          res = tasks.map(exec);
+        } else {
+          res = exec(tasks);
         }
-        try {
-          if (isArray(tasks)) {
-            return tasks.map(exec);
-          } else {
-            return exec(tasks);
-          }
-        } finally {
-          if (--dispatchDepth === 0) {
-            if (Object.keys(dispatchingSnapshot).length > 0) {
-              const resultSnapshot = { ...dispatchingSnapshot };
-              [...listeners].forEach((fn) => fn(resultSnapshot));
-            }
-          }
-        }
-      },
-    ),
-    select: defineAmosObject('store.select', (selectable: Selectable, snapshot?: Snapshot): any => {
+      } catch {}
+
+      if (store.isAutoBatch) {
+        Promise.resolve().then(flushDispatchQueue);
+      } else {
+        flushDispatchQueue();
+      }
+
+      return res;
+    } as any),
+    select: defineAmosObject('store.select', function select(
+      selectable: Selectable,
+      snapshot?: Snapshot,
+    ) {
       if (typeof selectable === 'function') {
         if (snapshot) {
           if (selectingSnapshot) {
@@ -255,11 +289,9 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
         }
         return state[selectable.key];
       }
-    }),
+    }) as any,
+    batchedUpdates: (cb) => cb(),
   };
   store = enhancers.reduce((previousValue, currentValue) => currentValue(previousValue), store);
-  if (typeof process === 'object' && process.env.NODE_ENV === 'development') {
-    Object.freeze(store);
-  }
   return store;
 }

@@ -1,6 +1,6 @@
 {
-  "name": "amos",
-  "version": "0.2.12",
+  "name": "@sourcebug/amos",
+  "version": "0.2.18",
   "description": "A decentralized state manager for react",
   "keywords": [
     "react",
@@ -10,9 +10,9 @@
     "amos"
   ],
   "author": "acrazing <joking.young@gmail.com>",
-  "main": "dist/amos.cjs.js",
-  "module": "dist/amos.es.js",
-  "umd": "dist/amos.umd.js",
+  "main": "dist/amos-alter.cjs.js",
+  "module": "dist/amos-alter.es.js",
+  "umd": "dist/amos-alter.umd.js",
   "types": "dist/index.d.ts",
   "files": [
     "src/",
@@ -119,5 +119,7 @@
     "arrowParens": "always",
     "endOfLine": "lf"
   },
-  "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
+  "publishConfig": {
+    "access": "public"
+  }
 }

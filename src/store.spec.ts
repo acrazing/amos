@@ -69,14 +69,17 @@ describe('store', () => {
     const listener = fn();
     const disposer = store.subscribe(listener);
     store.dispatch([setCount(1), setCount(2)]);
+    await Promise.resolve();
     expect(listener).toBeCalledTimes(1);
     listener.mockClear();
     store.dispatch(setCount(1));
     store.dispatch(setCount(2));
+    await Promise.resolve();
     expect(listener).toBeCalledTimes(2);
     listener.mockClear();
     disposer();
     store.dispatch(setCount(1));
+    await Promise.resolve();
     expect(listener).toBeCalledTimes(0);
   });
 });

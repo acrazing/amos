@@ -80,12 +80,17 @@ describe('useSelector', () => {
     const defaultSelector = selector(defaultFn);
     const strictSelector = selector(strictFn, (select, times) => [select(testBox).count, times]);
     const inlineFn = fn((select: Select) => select(testBox).count);
-    const expectCalled = (isDefault: boolean, isStrict: boolean, isInline: boolean) => {
+    const expectCalled = (
+      isDefault: boolean,
+      isStrict: boolean,
+      isInline: boolean,
+      first?: boolean,
+    ) => {
       expect(defaultFn).toBeCalledTimes(isDefault ? 1 : 0);
       defaultFn.mockClear();
-      expect(strictFn).toBeCalledTimes(isStrict ? 1 : 0);
+      expect(strictFn).toBeCalledTimes(isStrict ? (first ? 2 : 1) : 0);
       strictFn.mockClear();
-      expect(inlineFn).toBeCalledTimes(isInline ? 1 : 0);
+      expect(inlineFn).toBeCalledTimes(isInline ? (first ? 2 : 1) : 0);
       inlineFn.mockClear();
     };
     const { result, dispatch, rerender, waitForNextUpdate } = renderUseSelector(
@@ -99,7 +104,7 @@ describe('useSelector', () => {
       { count: 1, test: { count: 1, greets: ['PRELOAD'] } },
       { multiply: 1 },
     );
-    expectCalled(true, true, true);
+    expectCalled(true, true, true, true);
     expect(result.current).toEqual([1, 1, 1, 1]);
     dispatch(addGreet('HELLO'));
     await waitForNextUpdate();

@@ -20,6 +20,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
+    "dev": "rollup -w --config rollup.config.js",
     "bundle": "rollup --config rollup.config.js",
     "build": "run-s clean bundle",
     "test": "jest",

@@ -191,9 +191,9 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
       if (Object.keys(dispatchingSnapshot).length > 0) {
         const resultSnapshot = { ...dispatchingSnapshot };
         store.batchedUpdates(() => {
+          [...listeners].forEach((fn) => fn(resultSnapshot));
           dispatchingListeners.forEach((fn) => fn(resultSnapshot));
           dispatchingListeners.clear();
-          [...listeners].forEach((fn) => fn(resultSnapshot));
         });
       }
     }

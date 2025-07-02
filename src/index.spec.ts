@@ -19,6 +19,7 @@ import {
   signal,
   useDispatch,
   useSelector,
+  kAmosObject,
   useStore,
   VERSION,
 } from './index';
@@ -44,6 +45,7 @@ describe('amos', () => {
       isAmosObject,
       arrayEqual,
       VERSION,
+      kAmosObject,
     });
   });
 });

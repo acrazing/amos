@@ -168,6 +168,8 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
   const state: Snapshot = {};
   const boxes: Box[] = [];
   const listeners: Set<(updatedSnapshot: Snapshot) => void> = new Set();
+  const dispatchingListeners: Set<(updatedSnapshot: Snapshot) => void> = new Set();
+
   const ensure = (box: Box) => {
     if (state.hasOwnProperty(box.key)) {
       return;
@@ -189,6 +191,8 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
       if (Object.keys(dispatchingSnapshot).length > 0) {
         const resultSnapshot = { ...dispatchingSnapshot };
         store.batchedUpdates(() => {
+          dispatchingListeners.forEach((fn) => fn(resultSnapshot));
+          dispatchingListeners.clear();
           [...listeners].forEach((fn) => fn(resultSnapshot));
         });
       }
@@ -228,6 +232,9 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
     snapshot: () => state,
     isAutoBatch: false,
     subscribe: function subscribe(fn) {
+      if (dispatchDepth > 0) {
+        dispatchingListeners.add(fn);
+      }
       listeners.add(fn);
       return () => {
         listeners.delete(fn);

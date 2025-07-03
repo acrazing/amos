@@ -192,8 +192,11 @@ export function createStore(preloadedState?: Snapshot, ...enhancers: StoreEnhanc
         const resultSnapshot = { ...dispatchingSnapshot };
         store.batchedUpdates(() => {
           [...listeners].forEach((fn) => fn(resultSnapshot));
-          dispatchingListeners.forEach((fn) => fn(resultSnapshot));
-          dispatchingListeners.clear();
+          const baseDispatchingListeners = [...dispatchingListeners];
+          baseDispatchingListeners.forEach((fn) => {
+            dispatchingListeners.delete(fn);
+            return fn(resultSnapshot);
+          });
         });
       }
     }

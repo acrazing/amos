@@ -161,8 +161,9 @@ function selectorChanged(
  * @param selectors a selectable array
  */
 export function useSelector<Rs extends Selectable[]>(...selectors: Rs): MapSelector<Rs> {
-  const [, update] = useReducer((s) => s + 1, 0);
   const store = useStore();
+
+  const [, update] = useReducer((s) => s + 1, 0);
   const lastSelector = useRef<SelectorRef>(defaultSelectorRef);
   const lastStore = useRef<StoreRef>();
   const lastState = useRef<unknown[]>([]);
@@ -241,7 +242,7 @@ export function useSelector<Rs extends Selectable[]>(...selectors: Rs): MapSelec
               }
             } else if (updatedState.hasOwnProperty(selector.key)) {
               const newState = store.select(selector);
-              lastStore.current!.updated = newState !== results[i];
+              lastStore.current!.updated ||= newState !== results[i];
               results[i] = newState;
             }
           }

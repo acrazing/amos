@@ -53,10 +53,10 @@ export interface Store {
   snapshot: () => Readonly<Snapshot>;
 
   /**
-   * Subscribe the update of the store. The event contains all mutated boxes
-   * and its original state.
+   * Subscribe to store updates.
    *
-   * It only will be fired after the root dispatch completed.
+   * The provided listener is called with no arguments after the root
+   * dispatch has finished processing all mutations.
    */
   subscribe: (fn: () => void) => Unsubscribe;
 

@@ -51,7 +51,7 @@ export class QueryResult<R> implements JSONSerializable<QueryResultJSON<R>> {
   }
 
   isFulfilled() {
-    return this.status === 'pending';
+    return this.status === 'fulfilled';
   }
 
   isRejected() {

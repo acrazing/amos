@@ -5,14 +5,14 @@
 
 import { act } from '@testing-library/react';
 import { action, type Dispatch, type Select } from 'amos-core';
-import { countBox, expectCalled, expectCalledWith, sleep } from 'amos-testing';
+import { countBox, expectCalled, expectCalledWith } from 'amos-testing';
 import { clone } from 'amos-utils';
 import { renderDynamicHook } from './testUtils';
 import { QueryResult, QueryResultMap, useQuery } from './useQuery';
 
 const fn = async (dispatch: Dispatch, select: Select, multiply: number) => {
   dispatch(countBox.multiply(multiply));
-  await sleep(20);
+  await new Promise((resolve) => setTimeout(resolve, 20));
   dispatch(countBox.multiply(multiply));
   return multiply;
 };
@@ -28,6 +28,13 @@ const state = action(stateFn, {
 }).select(countBox);
 
 describe('useQuery', () => {
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
   it('should useQuery', async () => {
     const { result, mockFn, rerender } = renderDynamicHook(
       ({ multiply }) => useQuery(simple(multiply)),
@@ -43,6 +50,7 @@ describe('useQuery', () => {
     });
     expect(result.current).toEqual([void 0, q1]);
     await act(async () => {
+      jest.advanceTimersByTime(20);
       await result.current[1]._q;
     });
     expectCalled(mockFn, 1);
@@ -64,6 +72,7 @@ describe('useQuery', () => {
     expectCalled(simpleFn, 0);
 
     await act(async () => {
+      jest.advanceTimersByTime(20);
       await result.current[1]._q;
     });
     expectCalled(mockFn, 1);
@@ -87,6 +96,7 @@ describe('useQuery', () => {
     });
     expect(result.current).toEqual([1, q1]);
     await act(async () => {
+      jest.advanceTimersByTime(20);
       await result.current[1]._q;
     });
     expectCalled(stateFn, 1);
@@ -111,6 +121,7 @@ describe('useQuery', () => {
     expectCalled(mockFn, 1);
     expect(result.current[0][1]._q).toBeUndefined();
     await act(async () => {
+      jest.advanceTimersByTime(20);
       await result.current[1][1]._q;
     });
     expectCalled(simpleFn, 0);
@@ -122,6 +133,7 @@ describe('useQuery', () => {
     expectCalled(mockFn, 1);
     expect(result.current[1][0]).toEqual(void 0);
     await act(async () => {
+      jest.advanceTimersByTime(20);
       await result.current[1][1]._q;
     });
     expectCalled(simpleFn, 1);

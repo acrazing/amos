@@ -20,7 +20,7 @@ export class SessionRecord extends Record<SessionModel>({
   userId: 0,
 }) {
   isAnonymous() {
-    return this.userId > 0;
+    return this.userId <= 0;
   }
 }
 

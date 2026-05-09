@@ -30,22 +30,22 @@ import { Provider, useDispatch, useSelector } from 'amos/react';
 const countBox = numberBox('count');
 
 const App = React.memo(() => {
-    const dispatch = useDispatch();
-    const count = useSelector(countBox);
-    return (
-        <div>
-            <div>Count: {count}</div>
-            <button onClick={() => dispatch(countBox.add(1))}>Click me!</button>
-        </div>
-    );
+  const dispatch = useDispatch();
+  const count = useSelector(countBox);
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <button onClick={() => dispatch(countBox.add(1))}>Click me!</button>
+    </div>
+  );
 });
 
 const store = createStore();
 
 render(
-    <Provider store={store}>
-        <App />
-    </Provider>,
+  <Provider store={store}>
+    <App />
+  </Provider>,
 );
 ```
 
@@ -72,6 +72,6 @@ You can find more detailed information on Amos's concepts [here](./03-concepts.m
 Next, you can go to the [Concepts](./03-concepts.md) page to learn about the core ideas in Amos, or
 explore topics of interest in the menu on the left 👈 of this document.
 
-We recommend starting with our
-article, [How to design state in large-scale applications](./04-how-to.md), to understand the
-reasoning behind Amos's design and to help you make the most of it.
+We recommend starting with our article,
+[How to design state in large-scale applications](./04-how-to.md), to understand the reasoning
+behind Amos's design and to help you make the most of it.
